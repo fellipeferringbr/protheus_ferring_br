@@ -1,6 +1,3 @@
-
-#INCLUDE "Protheus.ch"
-
 /*
 ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
@@ -30,16 +27,13 @@ User Function GBEIC002()
 	Local cCodAgente:= Space(Len(SW6->W6_AGENTE))      	// Fornecedor do Frete
 	Local cFornecF	:= Space(Len(SW6->W6_FORNECF))     	// Loja Frete
 	Local cLojaF	:= Space(Len(SW6->W6_LOJAF))
-//	Local cFornecC	:= SF1->F1_FORNECE 					//If(cEmpAnt="08","008219","010167")		// Fornecedor SisComex  Criar parametro
-//	Local cLojaC	:= SF1->F1_LOJA 					//If(cEmpAnt="08","01","01")  				// LOja SisComes        Criar Parametro
+	Local cFornecC	:= SF1->F1_FORNECE 					//If(cEmpAnt="08","008219","010167")		// Fornecedor SisComex  Criar parametro
+	Local cLojaC	:= SF1->F1_LOJA 					//If(cEmpAnt="08","01","01")  				// LOja SisComes        Criar Parametro
 	Local aTitulos 	:= {}
-	Local i			:= 0
+	Local i			:= 0                              
 	Local l1aNFEI	:= .T.
-//	Local cNumInv   := Space(9)
+	Local cNumInv   := Space(9)
 	Local lAux:= .t.
-	Local aE2Recnos := Nil
-	Local nLoop := Nil
-
 	//
 	// Verifico se a NFE e de Importacao
 	//
@@ -47,7 +41,7 @@ User Function GBEIC002()
 	//DbSetOrder(1) //F1_FILIAL+F1_DOC+F1_SERIE+F1_FORNECE+F1_LOJA+F1_TIPO
 	//If DbSeek(xFilial("SF1")+"000046099"+"2  "+"002205"+"01")
 	If SF1->F1_TIPO $ "NC" .And. !Empty(SF1->F1_HAWB)
-		lNFI := .T.
+		lNFI := .T.     
 	Else
 		Return
 	EndIf
@@ -55,54 +49,55 @@ User Function GBEIC002()
 	//	Return
 	//EndIf
 	//
-	// Posicioneo SW6 - Capa Declaracao de Importacao
+	// Posicioneo SW6 - Capa Declaracao de Importacao 
 	//
-	DbSelectArea("SW6")
+	DbSelectArea("SW6") 
 	DbSetOrder(1) //W6_FILIAL+W6_HAWB
 	If DbSeek(xFilial("SW6")+SF1->F1_HAWB)
 		dDtDI 		:= SW6->W6_DT_DESE
 		cFornecF	:= SW6->W6_FORNECF
-		cLojaF		:= SW6->W6_LOJAF
+		cLojaF		:= SW6->W6_LOJAF  
 		//	cFornecS	:= SW6->W6_FORNECS
-		//	cLojaS		:= SW6->W6_LOJAS
-		cCodDespac 	:= SW6->W6_DESP
+		//	cLojaS		:= SW6->W6_LOJAS  
+		cCodDespac 	:= SW6->W6_DESP 
 		cCodAgente	:= SW6->W6_AGENTE
 		cCodCorret	:= SW6->W6_CORRETO
 		l1aNFEI		:= If(SF1->F1_DOC=SubStr(SW6->W6_NF_ENT,1,Len(SF1->F1_DOC)),.T.,.F.)
 	EndIf
 
-	//If Empty(cFornecS)
+	//If Empty(cFornecS) 
 	//	cFornecS	:= SF1->F1_FORNECE
 	//	cLojaS		:= SF1->F1_LOJA
 	//EndIf
 
 	//
-	// SY4 - Agentes Embarcadores
+	// SY4 - Agentes Embarcadores          
 	//
-	DbSelectArea("SY4")
+	DbSelectArea("SY4") 
 	DbSetOrder(1) //Y4_FILIAL+Y4_COD
 	If DbSeek(xFilial("SY4")+cCodAgente)
 		cFornecF:= SY4->Y4_FORN
-		cLojaF	:= SY4->Y4_LOJA
+		cLojaF	:= SY4->Y4_LOJA  
 	EndIf
 	//
 	// SY5 - Despachantes/Empresas
 	//
-	DbSelectArea("SY5")
+	DbSelectArea("SY5") 
 	DbSetOrder(1) //Y5_FILIAL+Y5_COD
 	If DbSeek(xFilial("SY5")+cCodDespac)
 		cFornecD:= SY5->Y5_FORNECE
-		cLojaD	:= SY5->Y5_LOJAF
+		cLojaD	:= SY5->Y5_LOJAF  
 	EndIf
 	//
-	// SYW - Corretores
+	// SYW - Corretores                    
 	//
-	DbSelectArea("SYW")
+	DbSelectArea("SYW") 
 	DbSetOrder(1) //YW_FILIAL+YW_COD
 	If DbSeek(xFilial("SY5")+cCodCorret)
 		cFornecD:= SY5->Y5_FORNECE
-		cLojaD	:= SY5->Y5_LOJAF
+		cLojaD	:= SY5->Y5_LOJAF  
 	EndIf
+
 
 	If l1aNFEI
 		//
@@ -135,29 +130,19 @@ User Function GBEIC002()
 		//
 		//
 		// Posicioneo SW9 - Cabeçalho Invoice
-		//
+		//               
 		If 	l1aNFEI
 			//
 			// Somente Excluos DI das invoices.
 			//
-
-			DbSelectArea("SW9")
+			DbSelectArea("SW9") 
 			DbSetOrder(3) //W9_FILIAL+W9_HAWB
 			If DbSeek(cSeekSW9 := xFilial("SW9")+SF1->F1_HAWB)
 				While !Eof() .And. cSeekSW9 = SW9->(W9_FILIAL+W9_HAWB) .and. lAux== .t.
 					DbSelectArea("SE2")
-					DbSetOrder(1) //E2_FILIAL+E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECE+E2_LOJA
-			//		cNumInv := U_RetZero(RIGHT(Alltrim(SW9->W9_INVOICE),9)+Space(Len(SE2->E2_NUM)-Len(RIGHT(Alltrim(SW9->W9_INVOICE),9))),9)
-			//		If DbSeek(xFilial("SE2")+"EIC"+cNumInv+"Z  "+'INV'+SW9->W9_FORN+SW9->W9_FORLOJ)
-			//			aE2Recnos := {SE2->(Recno())}
-			//		Else
-						aE2Recnos := U_FeGetE2Inv()
-			//		Endif
-					For nLoop := 1 To Len(aE2Recnos)
-						SE2->(dbGoto(aE2Recnos[nLoop]))
-						If SE2->(Deleted())
-							Loop
-						Endif
+					DbSetOrder(1) //E2_FILIAL+E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECE+E2_LOJA 
+					cNumInv := U_RetZero(RIGHT(Alltrim(SW9->W9_INVOICE),9)+Space(Len(SE2->E2_NUM)-Len(RIGHT(Alltrim(SW9->W9_INVOICE),9))),9)
+					If DbSeek(xFilial("SE2")+"EIC"+cNumInv+"Z  "+'INV'+SW9->W9_FORN+SW9->W9_FORLOJ)
 						aTitCP := {}
 						AADD(aTitCP, {'E2_PREFIXO'	, "EIC"											,Nil})
 						AADD(aTitCP, {'E2_NUM'		, SE2->E2_NUM									,Nil})
@@ -183,7 +168,7 @@ User Function GBEIC002()
 							DisarmTransaction()
 							dDataBase := dDataAtu
 							lAux:= .f.
-						EndIf
+						EndIf	
 
 
 						//DbSelectArea("SE2")
@@ -191,18 +176,18 @@ User Function GBEIC002()
 						//	SE2->E2_ZNUMDI := Space(10)
 						//MsUnlock()
 
-					Next
-					DbSelectArea("SW9")
+					EndIf
+					DbSelectArea("SW9") 
 					DbSkip()
 				End
 			EndIf
 			*/
 		EndIf
-
+		
 		If lAux:= .t.
 		For i := 1 To Len(aTitulos)
 			DbSelectArea("SE2")
-			DbSetOrder(1) //E2_FILIAL+E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECE+E2_LOJA
+			DbSetOrder(1) //E2_FILIAL+E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECE+E2_LOJA 
 			//If DbSeek(xFilial("SE2")+"EIC"+SF1->F1_DOC+STRZERO(i,Len(SE2->E2_PARCELA))+"INV"+aTitulos[i,1]+aTitulos[i,2])
 			//If DbSeek(xFilial("SE2")+"EIC"+ If(l1aNFEI,SubStr(SF1->F1_HAWB,1,Len(SE2->E2_NUM)),SubStr(SF1->F1_DOC,1,Len(SE2->E2_NUM))) +STRZERO(i,Len(SE2->E2_PARCELA)) + If(l1aNFEI,'TX ','NF ') + aTitulos[i,1]+aTitulos[i,2])
 			If DbSeek(xFilial("SE2")+"EIC"+SubStr(SF1->F1_DOC,1,Len(SE2->E2_NUM)) + STRZERO(i,Len(SE2->E2_PARCELA)) + If(l1aNFEI,'TX ','NF ') + aTitulos[i,1]+aTitulos[i,2])
@@ -231,164 +216,12 @@ User Function GBEIC002()
 
 					DisarmTransaction()
 					dDataBase := dDataAtu
+					Return
 				EndIf
-			EndIf
+			EndIf	
 		Next
 		endif
 	END TRANSACTION
 	dDataBase := dDataAtu
 	RestArea(aArea)
 Return
-
-/*
-Identificacao da Notas geradas pela Average
-PRIMEIRA     F1_TIPO_NF == "1" Importacao  Brasil-Localizacoes
-COMPLEMENTAR F1_TIPO_NF == "2" Despesas    Brasil-Localizacoes
-UNICA        F1_TIPO_NF == "3" Nota Fiscal Brasil-Localizacoes
-CUSTO REAL   F1_TIPO_NF == "4" Complemento Brasil-Localizacoes
-NFE FOB      F1_TIPO_NF == "5" Factura de Fob     Localizacoes
-NFE FRETE    F1_TIPO_NF == "6" Factura de Frete   Localizacoes
-NFE SEGURO   F1_TIPO_NF == "7" Factura de Seguro  Localizacoes
-NFE CIF      F1_TIPO_NF == "8" Factura de CIF     Localizacoes
-NFE FAA      F1_TIPO_NF == "9" Factura A. Aduana  Localizacoes
-NFE DESPESAS F1_TIPO_NF == "A" Factura de Gastos  Localizacoes
-NFE CUSTO    F1_TIPO_NF == "B" Factura de Costos  Localizacoes
-*/
-User Function FeGetE2Inv()  // Considera F1_HAWB e F1_FILIAL
-Static nCount    := 1
-Local lGerTitEIC := GetMV("MV_ZGBGTIT")   //AV SYSTEM -
-Local aE2Recnos  := {}
-Local cQuery     := Nil
-Local cAliasTop  := "TRB" + Dtos(Date()) + StrTran(Time(), ":", "") + StrZero(nCount ++, 4)
-Local aSavAre    := GetArea()
-
-If ! lGerTitEIC
-	Return(aE2Recnos)
-Endif
-
-If Empty(SF1->F1_HAWB) .Or. SF1->F1_TIPO_NF <> "1" .Or. SF1->F1_EST <> "EX" .Or. SF1->(Eof())
-	Return(aE2Recnos)
-Endif
-
-cQuery := " SELECT "                                            + ;
-          " SE2.R_E_C_N_O_ E2_RECNO "                           + ;
-          " FROM " + RetSqlName("SE2") + " SE2 "                + ;
-          " WHERE "                                             + ;
-          " E2_HIST LIKE '%" + Alltrim(SF1->F1_HAWB) + "%' "    + ;
-          " AND E2_FILIAL  = '" + SF1->F1_FILIAL  + "' "        + ;
-          " AND E2_PREFIXO = 'EIC' "                            + ;
-          " AND D_E_L_E_T_ = ' ' "
-/*
-          " AND E2_FORNECE = '" + SF1->F1_FORNECE + "' "        + ;
-          " AND E2_LOJA    = '" + SF1->F1_LOJA    + "' "        + ;
-*/
-
-dbUseArea(.T., "TOPCONN", TcGenQry(,,cQuery), cAliasTop, .F., .T.)
-
-Do While ! Eof()
-	Aadd(aE2Recnos, E2_RECNO)
-	dbSkip()
-Enddo
-
-(cAliasTop)->(dbCloseArea())
-
-
-RestArea(aSavAre)
-Return(aE2Recnos)
-
-
-User Function FE_ViewSE2(aE2Recnos)
-Local lOk := Nil
-
-lOk := U_miMyBrwByRecno("Titulos da Invoice", "SE2", ;
-                        {"E2_PREFIXO", "E2_NUM", "E2_HAWBEIC", "E2_HIST", ;
-                         "E2_VALOR", "E2_SALDO", "E2_BAIXA", "E2_TIPO", ;
-						 "E2_FORNECE", "E2_LOJA", "E2_EMISSAO", "E2_ORIGEM"}, ;
-                  aE2Recnos, "Prosseguir", "Abortar",,, -10)   //, nAddDlgWidth, nAddDlgHeight, nAddWidthButton)
-Return(lOk)
-
-
-
-
-
-
-
-
-User Function miMyBrwByRecno(cTitulo, cAlias, aFields, aRecnos, cBotaoOk, cBotaoFechar, nAddDlgWidth, nAddDlgHeight, nAddWidthButton)
-Local oDlg           := Nil
-Local nDlgWidth      := 600
-Local nDlgHeight     := 400
-Local nWidthButton   :=  46
-Local aArea          := GetArea()
-Local nLoop          := Nil
-Local aFieldPos      := {}
-Local nSpaceButton   := 2
-Local aArray         := {}
-Local aCabec         := {}
-Local cCabec         := Nil
-Local oBrowse        := Nil
-
-Default cTitulo         := ""
-Default cBotaoOk        := "Prosseguir"
-Default cBotaoFechar    := "Abortar"
-Default nAddDlgWidth    := 0
-Default nAddDlgHeight   := 0
-Default nAddWidthButton := 0
-
-nDlgWidth    += nAddDlgWidth
-nDlgHeight   += nAddDlgHeight
-nWidthButton += nAddWidthButton
-
-If IsBlind()
-	Return(.T.)
-Endif
-
-dbSelectArea(cAlias)
-
-If aFields == Nil
-	aFields := {}
-	aEval((cAlias)->(dbStruct()), {|z| Aadd(aFields, z[1])})
-Endif
-
-If Len(aRecnos) == 0
-	Return
-Endif
-
-aEval(aFields, {|z| Aadd(aFieldPos, (cAlias)->(FieldPos(z)))})
-
-For nLoop := 1 To Len(aRecnos)
-	(cAlias)->(dbGoto(aRecnos[nLoop]))
-	Aadd(aArray, {})
-	aEval(aFieldPos, {|z| Aadd(Atail(aArray), (cAlias)->(FieldGet(z)))})
-Next
-
-For nLoop := 1 To Len(aFields)
-	If Empty(cCabec := RetTitle(aFields[nLoop]))
-		cCabec := aFields[nLoop]
-	Endif
-	Aadd(aCabec, cCabec)
-Next
-
-DEFINE MSDIALOG oDlg TITLE cTitulo FROM 000,000 TO nDlgHeight, nDlgWidth PIXEL
-
-oBrowse := MsBrGetDBase():New( 6, 3, __DlgWidth(oDlg) - 6, __DlgHeight(oDlg) - 40,,,, oDlg,,,,,,,,,,,, .F., "", .T.,, .F.,,,)
-oBrowse:SetArray(aArray)
-oBrowse:bChange := {|| (cAlias)->(dbGoto(aRecnos[oBrowse:nAt]))}
-
-For nLoop := 1 To Len(aFields)
-	oBrowse:AddColumn( TCColumn():New( aCabec[nLoop]  , &("{|| aArray[oBrowse:nAt, " + Alltrim(Str(nLoop)) + "]}"), "",,,,"LEFT"))
-Next
-
-oBrowse:lColDrag	:= .T.
-oBrowse:lLineDrag	:= .T.
-oBrowse:lJustific	:= .T.
-oBrowse:nColPos		:= 1
-
-TBrowseButton():New(__DlgHeight(oDlg) - 28, __DlgWidth(oDlg) - ((nWidthButton + nSpaceButton) * 2),cBotaoOk    , oDlg,{||lOk := .F., oDlg:End()},nWidthButton,10,,oDlg:oFont,.F.,.T.,.F.,,.F.,,,.F.)
-TBrowseButton():New(__DlgHeight(oDlg) - 28, __DlgWidth(oDlg) - ((nWidthButton + nSpaceButton) * 1),cBotaoFechar, oDlg,{||lOk := .F., oDlg:End()},nWidthButton,10,,oDlg:oFont,.F.,.T.,.F.,,.F.,,,.F.)
-
-ACTIVATE MSDIALOG oDlg CENTERED
-
-RestArea(aArea)
-
-Return(.T.)
