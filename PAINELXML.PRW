@@ -23,6 +23,11 @@ User Function PainelXML()
 	Local nRadMenu1   := 1
 	Local cPerg       := "LERXML"
 	local i
+	
+	Private aXML := {}
+	Private oTmpTab1e
+	Private oTmpTab1
+	Private oTmpTab1es
 	Private cPrograma := ""
 	Private cFabrica  := ""
 	Private cTitulo   := ""
@@ -87,60 +92,13 @@ User Function PainelXML()
 	XEMAILREC  := ""
 	lRefaz     := .F.
 
-	//Criando parametro do programa  
-	// Criação de Parametro Sx6 deve ser somente Via configurador
-	//	DbSelectArea("SX6")
-	//	DbSetorder(1)
-	//	DbGoTop()
-	//	MsSeek(xFilial("SD1") + "MV_GRVPEDI")
-	//	If !Found()
-	//		Reclock("SX6",.T.)
-	//		SX6->X6_FIL     := xFilial("SD1")
-	//		SX6->X6_VAR     := "MV_GRVPEDI"
-	//		SX6->X6_TIPO    := "C"
-	//		SX6->X6_DESCRIC := "Controle de gravacao pedidos de compras"
-	//		MsUnlock()
-	//	EndIf
-
 	//Verificando se o usuario ficou prezo na ultima gravacao do pedido	
-	_lGrava := AllTrim(UPPER(Getmv("MV_GRVPEDI")))
-	//	If _lGrava == _cUsuario
-	//		DbSelectArea("SX6")
-	//		DbGoTop()
-	//		While ! EoF()
-	//			If AllTrim(SX6->X6_VAR)=="MV_GRVPEDI" .And. SX6->X6_FIL==xFilial("SC7")
-	//				RecLock("SX6",.F.)
-	//				SX6->X6_CONTEUD:=""
-	//				MsUnlock()
-	//			EndIf
-	//			DbSkip()
-	//		EndDo
-	//	EndIf
+	///_lGrava := AllTrim(UPPER(Getmv("MV_GRVPEDI")))
+	_lGrava := AllTrim(UPPER(SuperGetMV("MV_GRVPEDI", ," ")))
 	
-	
-	
-		cAlias1 := GetNextAlias()
-
-
-		cQuery := " SELECT X6_VAR AS X6VAR, SX6_FIL as SX6FIL"
-		cQuery += " FROM "+RetSQLName("SX6") + " SX6  "
-		cQuery += " WHERE X6_FILIAL = '" + xFilial("SX6") + "' "
-		cQuery += " AND X6_VAR= 'MV_GRVPEDI' AND X6_FIL= '" +   xFilial("SC7")+ "' "    
-		cQuery += " AND D_E_L_E_T_= ' ' "
-
-		cQuery := ChangeQuery(cQuery)
-		dbUseArea(.T., 'TOPCONN', TcGenQry(,,cQuery), cAlias1)
-		While (cAlias1)->(!EOF())
-			       
-			If AllTrim(cAlias1->X6VAR)=="MV_GRVPEDI" .And. cAlias1->X6FIL==xFilial("SC7")
-
-				PUTMV("MV_GRVPEDI", "")
-			endif
-			        (cAlias1)->(dbSkip())
-		End
-		(cAlias1)->(DbCloseArea())
-	
-	
+	If _lGrava == _cUsuario
+	   PUTMV("MV_GRVPEDI", "")
+	EndIf
 
 	//Verifica se existe o arquivo de configuração  
 	If ! File( cArqTxt )
@@ -156,8 +114,7 @@ User Function PainelXML()
 	EndIf
 
 	//Filtros de XML 
-	ValidPerg(cPerg)
-
+	///ValidPerg(cPerg)
 	lContinua := .F.
 	While !lContinua
 		If !Pergunte(cPerg, .T.)
@@ -271,8 +228,8 @@ User Function PainelXML()
 	EndDo
 	FT_FUSE()
 
-	cDecUni := val(cDecUni)
-	cDecQtd := val(cDecQtd)
+	cDecUni := val(cValToChar(cDecUni))
+	cDecQtd := val(cValToChar(cDecQtd))
 
 	//Controle de numeracao do numero da nota fiscal 
 	If cZerosP
@@ -321,6 +278,7 @@ User Function PainelXML()
 
 	//Lista dos XML dos fornecedores										
 	aXML := {}
+
 	ADir(cCaminho + "\*.xml",aXML)
 
 	If Len(aXml)==0
@@ -339,11 +297,8 @@ User Function PainelXML()
 
 	oTmpTab1:=FWTemporaryTable():New( "LS5" )
 	oTmpTab1:SetFields( aCampos5 )
-	oTmpTabl:AddIndex("01",{"PRODUTO"})
+	oTmpTab1:AddIndex("01",{"PRODUTO"})
 	oTmpTab1:Create()
-
-
-
 
 	DbSelectArea("LS5")
 
@@ -391,17 +346,11 @@ User Function PainelXML()
 	//	dbSetIndex( cArqTrab +OrdBagExt())
 	//	DbSelectArea("LS1")
 
-
-
 	oTmpTab1e:=FWTemporaryTable():New( "LS1" )
 	oTmpTab1e:SetFields( aCampos )
-	oTmpTable:AddIndex("01",{"SEQ"})
-	oTmpTable:Create()
+	oTmpTab1e:AddIndex("01",{"SEQ"})
+	oTmpTab1e:Create()
 	DbSelectArea("LS1")
-
-
-
-
 
 	aCampos3:= {{"OK"      , "C",   2, 0 },;
 	{"EMISSAO" , "D",   8, 0 },;
@@ -415,21 +364,13 @@ User Function PainelXML()
 	{"XML"     , "C", 150, 0 },;
 	{"CHAVE"   , "C",  44, 0 },;
 	{"CHVCLI"  , "C",  44, 0 },;
-	{"TOTALNF" , "N",  17, 2 }}
-
-	//	cArqTrab3  := CriaTrab(aCampos3)
-	//	dbUseArea( .T.,, cArqTrab3, "LS3", if(.F. .Or. .F., !.F., NIL), .F. )
-	//	IndRegua("LS3",cArqTrab3,"NOME+NOTA",,,)
-	//	dbSetIndex( cArqTrab3 + OrdBagExt())
-	//	DbSelectArea("LS3")
-
+	{"TOTALNF" , "N",  17, 2 },;
+	{"TPCTE"	  , "C",  01, 0 }} // by Elcy, novembro/2022
 
 	oTmpTab1es:=FWTemporaryTable():New( "LS3" )
 	oTmpTab1es:SetFields( aCampos3 )
-	oTmpTables:AddIndex("01",{"NOME","NOTA"})
-	oTmpTables:Create()
-	DbSelectArea("LS3")
-
+	oTmpTab1es:AddIndex("01",{"NOME","NOTA"})
+	oTmpTab1es:Create()
 
 	_cCNPJ  := ""
 	_cCNPJ2 := ""
@@ -450,11 +391,12 @@ Return .T.
 /*/
 //------------------------------------------------------------------------------------------
 Static Function XMLFOUND()
-	local i,w
+	Private i,w
 	Private OBRWP     := Nil
 	Private OBRWI     := Nil
 	Private cMarca    := GetMark()
 	Private nTotalCTE := 0
+	Private cTpCTe		:= "" // by Elcy, novembro/2022
 
 	aCampos4:= {{"NOTA"      ,"C",9,0 },;
 	{"FORNECEDOR","C",6,0 },;
@@ -468,8 +410,8 @@ Static Function XMLFOUND()
 
 	oTmpTab1es4:=FWTemporaryTable():New( "LS4" )
 	oTmpTab1es4:SetFields( aCampos4 )
-	oTmpTables4:AddIndex("01",{"FORNEC","LOJA","NOTA"})
-	oTmpTables4:Create()
+	oTmpTab1es4:AddIndex("01",{"FORNECEDOR","LOJA","NOTA"})
+	oTmpTab1es4:Create()
 	DbSelectArea("LS4")
 
 	cNota     := ''
@@ -556,7 +498,7 @@ Static Function XMLFOUND()
 					lFornec:=.F.
 				EndIf
 				// Filtra por número de nota
-				If cNota < MV_PAR07 .Or. cNota > MV_PAR08
+				If AllTrim(cNota) < AllTrim(MV_PAR07) .Or. AllTrim(cNota) > AllTrim(MV_PAR08)
 					lFornec:=.F.
 				EndIf
 				// Filtra por Tipo de XML
@@ -599,6 +541,7 @@ Static Function XMLFOUND()
 					LS3->CHVCLI  := cChaveCli
 					If nTipo == 4
 						LS3->TOTALNF := nTotalCTE
+						LS3->TPCTE	 := cTpCTe // by Elcy, novembro/2022
 					EndIf
 					MsUnlock()
 					lAchou :=.T.
@@ -617,25 +560,20 @@ Static Function XMLFOUND()
 
 	DbSelectArea("LS4")
 	DbCloseArea("LS4")
-	fErase( cArqTrab4+".DTC")
-	fErase( cArqTrab4+ OrdBagExt() )
 
 	If lAchou==.F.
 		MsgAlert("Não existem arquivos para serem importados no momento...","Atenção...")
 		DbSelectArea("LS1")
 		DbCloseArea("LS1")
-		fErase( cArqTrab+".DTC")
-		fErase( cArqTrab+ OrdBagExt() )
+
 
 		DbSelectArea("LS5")
 		DbCloseArea("LS5")
-		fErase( cArqTrab5+".DTC")
-		fErase( cArqTrab5+ OrdBagExt() )
+
 
 		DbSelectArea("LS3")
 		DbCloseArea("LS3")
-		fErase( cArqTrab3+".DTC")
-		fErase( cArqTrab3+ OrdBagExt() )
+
 		Return
 	EndIf
 
@@ -794,18 +732,13 @@ Static Function XMLFOUND()
 	//Apagando arquivos temporarios  
 	DbSelectArea("LS1")
 	DbCloseArea("LS1")
-	fErase( cArqTrab+".DTC")
-	fErase( cArqTrab+ OrdBagExt() )
+
 
 	DbSelectArea("LS5")
 	DbCloseArea("LS5")
-	fErase( cArqTrab5+".DTC")
-	fErase( cArqTrab5+ OrdBagExt() )
 
 	DbSelectArea("LS3")
 	DbCloseArea("LS3")
-	fErase( cArqTrab3+".DTC")
-	fErase( cArqTrab3+ OrdBagExt() )
 
 Return .T.
 
@@ -819,39 +752,48 @@ Gerando pre nota
 **************************************************************************************************/
 Static Function IMPORTA()
 	Local nSomaValores := 0
+	Local lRet:=.T.
 
 	//Verifico se existe a nota fiscal  
-	If !file(cCaminho + "\" + Lower(LS3->XML))
+	If LS3->(Eof())
+		Return
+	EndIf
+	If !file(cCaminho + "\" + Lower(LS3->XML)) 
 		MsgAlert("Este arquivo já foi processado por outro usuário!","Atenção...")
 
 		If !LS3->(EoF())
 			Reclock("LS3",.F.)
 			DbDelete()
+			LS3->( dbCommit() )
+			LS3->(__DBPack())
 			MsUnlock()
+	
 		EndIf
 
 		DbSelectArea("LS3")
 		DbGoTop()
-		PROCESS()
-		Return .F.
+		If LS3->(!EOF())
+			PROCESS()
+		EndIf
+		lRet:=.F.
 	EndIf
 
 	//Verificando se todas as variaveis foram preenchidas 
-	If Empty(cNota)
+	If Empty(cNota) .And. lRet
 		MsgAlert("Numero de nota fiscal não encontrada!")
-		Return .F.
+		lRet:=.F.
 	EndIf
-	If Empty(_cCNPJ)
+	If Empty(_cCNPJ) .And. lRet
 		MsgAlert("Dados do fornecedor não encontradosNumero de nota fiscal não encontrada!")
-		Return .F.
+		lRet:=.F.
 	EndIf
-	If nTotIt <= 0
+	If nTotIt <= 0  .And. lRet
 		MsgAlert("Nota fiscal não contem itens!")
-		Return .F.
+		lRet:=.f.
 	EndIf
-	If nTotalNF <= 0
+	If nTotalNF <= 0 .And. lRet
 		MsgAlert("Nota fiscal sem valores das mercadorias!")
-		Return .F.
+		lRet:=.f.
 	EndIf
 
 	// Verificando se todos os produtos foram identificados  
@@ -868,7 +810,11 @@ Static Function IMPORTA()
 
 	If lIdent
 		MsgAlert("Existem produtos não identificados, corrija primeiro!","Atenção...")
-		Return
+		lRet:=.f.
+	EndIf
+
+	If !lRet
+	   Return
 	EndIf
 
 	//Verificando se o pedido foi feito por item  
@@ -942,8 +888,8 @@ Static Function IMPORTA()
 
 					oTmpTab1es5:=FWTemporaryTable():New( "PRO" )
 					oTmpTab1es5:SetFields( aProdutos )
-					oTmpTables5:AddIndex("01",{"DbSelectArea","PRODUTO","ITEM"})
-					oTmpTables5:Create()
+					oTmpTab1es5:AddIndex("01",{"DbSelectArea","PRODUTO","ITEM"})
+					oTmpTab1es5:Create()
 					DbSelectArea("PRO")
 
 					//Aglutinando produtos iguais 
@@ -1003,8 +949,6 @@ Static Function IMPORTA()
 			End
 			DbSelectArea("PRO")
 			DbCloseArea("PRO")
-			fErase( cArqTrabp+".DTC")
-			fErase( cArqTrabp+ OrdBagExt() )
 
 			If !Empty(cMsg)
 				DEFINE MSDIALOG oProdd FROM 0,0 TO 300,420 PIXEL TITLE "Produtos sem Saldos Disponiveis no pedido..."
@@ -1068,8 +1012,8 @@ Static Function IMPORTA()
 
 			oTmpTab1es5:=FWTemporaryTable():New( "PRO" )
 			oTmpTab1es5:SetFields( aProdutos )
-			oTmpTables5:AddIndex("01",{"PRODUTO"})
-			oTmpTables5:Create()
+			oTmpTab1es5:AddIndex("01",{"PRODUTO"})
+			oTmpTab1es5:Create()
 			DbSelectArea("PRO")
 
 			//Aglutinando produtos iguais
@@ -1106,12 +1050,17 @@ Static Function IMPORTA()
 			{"QTDIT"  ,"N",5,0 },;
 			{"VALIDO" ,"N",5,0 }}
 
-			cArqTrab2  := CriaTrab(aCampos2)
+			//cArqTrab2  := CriaTrab(aCampos2)
 			cIndice    := "Descend(DTOS(EMISSAO))"
-			dbUseArea( .T.,, cArqTrab2, "LS2", if(.F. .Or. .F., !.F., NIL), .F. )
-			IndRegua("LS2",cArqTrab2,cIndice,,,)
-			dbSetIndex( cArqTrab2 +OrdBagExt())
-			DbSelectArea("LS2")
+			//dbUseArea( .T.,, cArqTrab2, "LS2", if(.F. .Or. .F., !.F., NIL), .F. )
+			//IndRegua("LS2",cArqTrab2,cIndice,,,)
+			//dbSetIndex( cArqTrab2 +OrdBagExt())
+			//DbSelectArea("LS2")
+
+			oTmpTab1:=FWTemporaryTable():New( cArqTrab2 )
+			oTmpTab1:SetFields( aCampos2 )
+			oTmpTab1:AddIndex("LS2",cArqTrab2,cIndice)
+			oTmpTab1:Create()
 
 			lAchou:=.F.
 
@@ -1228,13 +1177,10 @@ Static Function IMPORTA()
 
 			DbSelectArea("PRO")
 			DbCloseArea("PRO")
-			fErase( cArqTrabp+".DTC")
-			fErase( cArqTrabp+ OrdBagExt() )
 
 			DbSelectArea("LS2")
 			DbCloseArea("LS2")
-			fErase( cArqTrab2+".DTC")
-			fErase( cArqTrab2+ OrdBagExt() )
+
 		Else
 			//Gerar pre nota
 			VALIDA()
@@ -1296,6 +1242,8 @@ Static Function IMPORTA()
 
 						Reclock("LS3",.F.)
 						DbDelete()
+						LS3->( dbCommit() )
+						LS3->(__DBPack())
 						MsUnlock()
 
 						DbSelectArea("LS3")
@@ -1321,7 +1269,9 @@ Static Function IMPORTA()
 							DbSkip()
 						End
 
-						PROCESS()
+						If LS3->(!EOF())
+							PROCESS()
+						EndIf
 
 						If MV_PAR09 <> 2
 							Return
@@ -1435,7 +1385,10 @@ Static Function IMPORTA()
 
 							Reclock("LS3",.F.)
 							DbDelete()
+							LS3->( dbCommit() )
+							LS3->(__DBPack())
 							MsUnlock()
+							LS3->(DbSkip())
 
 							DbSelectArea("LS3")
 							DbGoTop()
@@ -1443,8 +1396,11 @@ Static Function IMPORTA()
 							If MV_PAR09 <> 2 
 								MsgAlert("Pré-Nota " + cNotaAtu + " gerada com sucesso!","Atenção...")
 							EndIf
+							
+							If LS3->(!EOF())
+								PROCESS()
+							EndIf
 
-							PROCESS()
 						EndIf
 					EndIf
 				EndIf
@@ -1586,6 +1542,8 @@ Static Function VALIDA()
 
 			Reclock("LS3",.F.)
 			DbDelete()
+			LS3->( dbCommit() )
+			LS3->(__DBPack())
 			MsUnlock()
 
 			DbSelectArea("LS3")
@@ -1611,7 +1569,9 @@ Static Function VALIDA()
 				DbSkip()
 			End
 
-			PROCESS()
+			If LS3->(!Eof())
+				PROCESS()
+			EndIf
 			oPedido:end()
 
 			If MV_PAR09 <> 2
@@ -1706,6 +1666,8 @@ Static Function VALIDA()
 
 				Reclock("LS3",.F.)
 				DbDelete()
+				LS3->( dbCommit() )
+				LS3->(__DBPack())
 				MsUnlock()
 
 				DbSelectArea("LS3")
@@ -1716,8 +1678,10 @@ Static Function VALIDA()
 				EndIf
 
 				MsgAlert("Pré-Nota " + cNotaAtu + " gerada com sucesso!","Atenção...")
-
-				PROCESS()
+				
+				If LS3->(!EOF())
+					PROCESS()
+				EndIf
 			EndIf
 		EndIf
 	EndIf
@@ -1822,8 +1786,7 @@ Static Function CORRIGE()
 
 		DbSelectArea("LS4")
 		DbCloseArea("LS4")
-		fErase( cArqTrab6+".DTC")
-		fErase( cArqTrab6+ OrdBagExt() )
+
 		Return 
 	EndIf
 
@@ -1974,6 +1937,11 @@ Static Function zIMPXML()
 			_cCNPJ    := AllTrim(oXml:_CTEPROC:_CTE:_INFCTE:_EMIT:_CNPJ:TEXT)
 			cNota     := oXml:_CTEPROC:_CTE:_INFCTE:_IDE:_NCT:TEXT
 			nTotalCTE := Val(oxml:_CTEPROC:_CTE:_INFCTE:_VPREST:_VTPREST:TEXT)
+
+			// Cria variável para identificar o tipo do CT-e gravar corretamente o campo F1_TPCTE, para posterior uso em PVA SPED
+			//
+			// by Elcy, nov/2022 - Solicitação Vilma Bernardes, Coordenadora Fiscal
+			cTpCTe	 := oXml:_CTEPROC:_CTE:_INFCTE:_IDE:_TPCTE:TEXT
 
 			If Empty(cSerieNF)
 				cSerie := oXml:_CTEPROC:_CTE:_INFCTE:_IDE:_SERIE:TEXT
@@ -2273,6 +2241,22 @@ Static Function PRENOTA()
 		SF1->F1_RECBMTO:= DDATABASE
 		SF1->F1_EST    := SA2->A2_EST
 		SF1->F1_ESPECIE:= Iif(nTipo == 4, "CTE", cEspecie)
+
+		// Se tipo for CTe, grava campo Tipo de CTE para posterior uso em PVA SPED
+		//
+		// by Elcy, nov/2022 - Solicitação Vilma Bernardes, Coordenadora Fiscal
+		// Valores possíveis para TPCTE no XML: 0=Normal; 1=Compl.Valor; 2=Anulação; 3=Substituição
+		If LS3->TPCTE == '0'  // Normal
+			SF1->F1_TPCTE	:= "N"
+		ElseIf LS3->TPCTE == '1' // Complemento de Valor
+			SF1->F1_TPCTE	:= "C" 
+		ElseIf LS3->TPCTE == '2' // Anulação
+			SF1->F1_TPCTE	:= "A"
+		ElseIf LS3->TPCTE == '3' // Substituição
+			SF1->F1_TPCTE	:= "S"
+		EndIf
+		/* Fim gravação F1_TPCTE */
+
 		If lBloq
 			SF1->F1_STATUS:= "B"
 			SF1->F1_APROV := "000001"
@@ -2572,44 +2556,7 @@ Static Function NEWPED()
 		ALERT("Atencao!!!, O Usuario "+_lGrava+" Esta concretizando um Pedido de Compra, Aguarde...")
 		Return
 	Else
-
-
-		//		DbSelectArea("SX6")
-		//		DbGoTop()
-		//		While ! EoF()
-		//			If AllTrim(SX6->X6_VAR)=="MV_GRVPEDI" .And. SX6->X6_FIL==xFilial("SC7")
-		//				RecLock("SX6",.F.)
-		//				SX6->X6_CONTEUD:="NF-ELETRONICA-"+_cUsuario
-		//				MsUnlock()
-		//			EndIf
-		//			DbSkip()
-		//		End
-
-		cAlias1 := GetNextAlias()
-
-
-		cQuery := " SELECT X6_VAR AS X6VAR, SX6_FIL as SX6FIL"
-		cQuery += " FROM "+RetSQLName("SX6") + " SX6  "
-		cQuery += " WHERE X6_FILIAL = '" + xFilial("SX6") + "' "
-		cQuery += " AND X6_VAR= 'MV_GRVPEDI' AND X6_FIL= '" +   xFilial("SC7")+ "' "    
-		cQuery += " AND D_E_L_E_T_= ' ' "
-
-		cQuery := ChangeQuery(cQuery)
-		dbUseArea(.T., 'TOPCONN', TcGenQry(,,cQuery), cAlias1)
-		While (cAlias1)->(!EOF())
-			       
-			If AllTrim(cAlias1->X6VAR)=="MV_GRVPEDI" .And. cAlias1->X6FIL==xFilial("SC7")
-
-				PUTMV("MV_GRVPEDI","NF-ELETRONICA-"+_cUsuario)
-			endif
-			        (cAlias1)->(dbSkip())
-		End
-		(cAlias1)->(DbCloseArea())
-
-
-
-
-
+		PUTMV("MV_GRVPEDI","NF-ELETRONICA-"+_cUsuario)
 	EndIf
 
 	cNumPed := GETSXENUM("SC7","C7_NUM")
@@ -2671,44 +2618,7 @@ Static Function NEWPED()
 			ConOut("Error: "+ cError)
 		EndIf
 	Else
-
-		//Liberando a Gravacao de um pedido para outro usuario				³
-
-		//		DbSelectArea("SX6")
-		//		DbGoTop()
-		//		While ! EoF()
-		//			If AllTrim(SX6->X6_VAR)=="MV_GRVPEDI" .And. SX6->X6_FIL==xFilial("SC7")
-		//				RecLock("SX6",.F.)
-		//				SX6->X6_CONTEUD := ""
-		//				MsUnlock()
-		//			EndIf
-		//			DbSkip()
-		//		End
-
-		cAlias1 := GetNextAlias()
-
-
-		cQuery := " SELECT X6_VAR AS X6VAR, SX6_FIL as SX6FIL"
-		cQuery += " FROM "+RetSQLName("SX6") + " SX6  "
-		cQuery += " WHERE X6_FILIAL = '" + xFilial("SX6") + "' "
-		cQuery += " AND X6_VAR= 'MV_GRVPEDI' AND X6_FIL= '" +   xFilial("SC7")+ "' "    
-		cQuery += " AND D_E_L_E_T_= ' ' "
-
-		cQuery := ChangeQuery(cQuery)
-		dbUseArea(.T., 'TOPCONN', TcGenQry(,,cQuery), cAlias1)
-		While (cAlias1)->(!EOF())
-			       
-			If AllTrim(cAlias1->X6VAR)=="MV_GRVPEDI" .And. cAlias1->X6FIL==xFilial("SC7")
-
-				PUTMV("MV_GRVPEDI", "")
-			endif
-			        (cAlias1)->(dbSkip())
-		End
-		(cAlias1)->(DbCloseArea())
-
-
-
-
+		PUTMV("MV_GRVPEDI", "")
 		MsgAlert("Pedido " + cNumped + " Gerado com sucesso!","Atenção...")
 	EndIf
 	DbSelectArea("LS1")
@@ -2748,51 +2658,8 @@ Static Function NEWPED2()
 		ALERT("Atencao!!!, O Usuario "+_lGrava+" Esta concretizando um Pedido de Compra, Aguarde...")
 		Return
 	Else
-		//		DbSelectArea("SX6")
-		//		DbGoTop()
-		//		While ! EoF()
-		//			If AllTrim(SX6->X6_VAR)=="MV_GRVPEDI" .And. SX6->X6_FIL==xFilial("SC7")
-		//				RecLock("SX6",.F.)
-		//				SX6->X6_CONTEUD := "NF-ELETRONICA-"+_cUsuario
-		//				MsUnlock()
-		//			EndIf
-		//			DbSkip()
-		//		End
-
-
-
-
-
-		cAlias1 := GetNextAlias()
-
-
-		cQuery := " SELECT X6_VAR AS X6VAR, SX6_FIL as SX6FIL"
-		cQuery += " FROM "+RetSQLName("SX6") + " SX6  "
-		cQuery += " WHERE X6_FILIAL = '" + xFilial("SX6") + "' "
-		cQuery += " AND X6_VAR= 'MV_GRVPEDI' AND X6_FIL= '" +   xFilial("SC7")+ "' "    
-		cQuery += " AND D_E_L_E_T_= ' ' "
-
-		cQuery := ChangeQuery(cQuery)
-		dbUseArea(.T., 'TOPCONN', TcGenQry(,,cQuery), cAlias1)
-		While (cAlias1)->(!EOF())
-			       
-			If AllTrim(cAlias1->X6VAR)=="MV_GRVPEDI" .And. cAlias1->X6FIL==xFilial("SC7")
-
-				PUTMV("MV_GRVPEDI", "NF-ELETRONICA-"+_cUsuario)
-			endif
-			        (cAlias1)->(dbSkip())
-		End
-		(cAlias1)->(DbCloseArea())
-
-
-
-
-
-
-
-
+		PUTMV("MV_GRVPEDI", "NF-ELETRONICA-"+_cUsuario)
 	EndIf
-
 
 	//Numero do Pedido de compra											³
 
@@ -2858,47 +2725,7 @@ Static Function NEWPED2()
 			ConOut("Error: "+ cError)
 		EndIf
 	Else
-
-		//Liberando a Gravacao de um pedido para outro usuario				³
-
-		//		DbSelectArea("SX6")
-		//		DbGoTop()
-		//		While ! EoF()
-		//			If AllTrim(SX6->X6_VAR)=="MV_GRVPEDI" .And. SX6->X6_FIL==xFilial("SC7")
-		//				RecLock("SX6",.F.)
-		//				SX6->X6_CONTEUD:=""
-		//				MsUnlock()
-		//			EndIf
-		//			DbSkip()
-		//		End
-		calias1 := GetNextAlias()
-
-
-		cQuery := " SELECT X6_VAR AS X6VAR, SX6_FIL as SX6FIL"
-		cQuery += " FROM "+RetSQLName("SX6") + " SX6  "
-		cQuery += " WHERE X6_FILIAL = '" + xFilial("SX6") + "' "
-		cQuery += " AND X6_VAR= 'MV_GRVPEDI' AND X6_FIL= '" +   xFilial("SC7")+ "' "    
-		cQuery += " AND D_E_L_E_T_= ' ' "
-
-		cQuery := ChangeQuery(cQuery)
-		dbUseArea(.T., 'TOPCONN', TcGenQry(,,cQuery), cAlias1)
-		While (cAlias1)->(!EOF())
-			       
-			If AllTrim(cAlias1->X6VAR)=="MV_GRVPEDI" .And. cAlias1->X6FIL==xFilial("SC7")
-
-				PUTMV("MV_GRVPEDI", "")
-			endif
-			        (cAlias1)->(dbSkip())
-		End
-		(cAlias1)->(DbCloseArea())
-
-
-
-
-
-
-
-
+		PUTMV("MV_GRVPEDI", "")
 		MsgAlert("Pedido " + cNumped + " Gerado com sucesso!","Atenção...")
 	EndIf
 	DbSelectArea("LS1")
@@ -2935,19 +2762,21 @@ Static Function PROCESS()
 		ObjectMethod(oTela,"Refresh()")
 		Return
 	EndIf
-
-
 	//Verifico se existe a nota fiscal									³
 
 	If !file(cCaminho + "\" + Lower(LS3->XML))
 		MsgAlert("Este arquivo já foi processado por outro usuário!","Atenção...")
 		Reclock("LS3",.F.)
 		DbDelete()
+		LS3->( dbCommit() )
+		LS3->(__DBPack())
 		MsUnlock()
 
 		DbSelectArea("LS3")
 		DbGoTop()
-		PROCESS()
+		If LS3->(!EOF()) 
+			PROCESS()
+		EndIf
 		Return
 	EndIf
 
@@ -3351,6 +3180,12 @@ Static Function PROCESS()
 				EndIf
 				cNatOP	:=oxml:_CTEPROC:_CTE:_INFCTE:_IDE:_NATOP:TEXT
 				cEmissao:=oXml:_CTEPROC:_CTE:_INFCTE:_IDE:_DHEMI:TEXT
+
+				// Cria variável para identificar o tipo do CT-e gravar corretamente o campo F1_TPCTE, para posterior uso em PVA SPED
+				//
+				// by Elcy, nov/2022 - Solicitação Vilma Bernardes, Coordenadora Fiscal
+				cTpCTe	:=	oXml:_CTEPROC:_CTE:_INFCTE:_IDE:_TPCTE:TEXT
+
 				cUM		:= 'UN'
 				_cCNPJ	:= AllTrim(oXml:_CTEPROC:_CTE:_INFCTE:_EMIT:_CNPJ:TEXT)//AllTrim(oxml:_NFEPROC:_NFE:_INFNFE:_DEST:_CNPJ:TEXT)
 
@@ -3659,6 +3494,8 @@ Static Function RECUSAR()
 
 		Reclock("LS3",.F.)
 		DbDelete()
+		LS3->( dbCommit() )
+		LS3->(__DBPack())
 		MsUnlock()
 
 		DbSelectArea("LS3")
@@ -3683,7 +3520,9 @@ Static Function RECUSAR()
 			MsUnlock()
 			DbSkip()
 		End
-		PROCESS()
+		If LS3->(!Eof())
+			PROCESS()
+		EndIf
 	EndIf
 
 Return .T.
@@ -3837,8 +3676,6 @@ Static Function DIVERG()
 	EndIf
 	DbSelectArea("LS4")
 	DbCloseArea("LS4")
-	fErase( cArqTrab4+".DTC")
-	fErase( cArqTrab4+ OrdBagExt() )
 
 Return .T.
 
@@ -4989,10 +4826,10 @@ Static Function ConfCFG()
 	{"DECUNI" ,"N",  2,0 },;
 	{"EMAIL"  ,"C",300,0 }}
 
-	cArqTrab  := CriaTrab(aCampos)
-	If Select("EMP") > 0
-		DbCloseArea("EMP")
-	EndIf
+	//cArqTrab  := CriaTrab(aCampos)
+	//If Select("EMP") > 0
+	//	DbCloseArea("EMP")
+	//EndIf
 	//	dbUseArea( .T.,, cArqTrab, "EMP", if(.F. .Or. .F., !.F., NIL), .F. )
 	//	IndRegua("EMP",cArqTrab,"EMPRESA+FILIAL",,,)
 	//	dbSetIndex( cArqTrab +OrdBagExt())
@@ -5146,8 +4983,7 @@ Static Function ConfCFG()
 	If .not. lOK
 		DbSelectArea("EMP")
 		DbCloseArea("EMP")
-		fErase( cArqTrab+".DTC")
-		fErase( cArqTrab+ OrdBagExt() )
+
 		Return( lOK )
 	EndIf
 
@@ -5224,8 +5060,7 @@ Static Function ConfCFG()
 	FClose(cArqTxt)
 	DbSelectArea("EMP")
 	DbCloseArea("EMP")
-	fErase( cArqTrab+".DTC")
-	fErase( cArqTrab+ OrdBagExt() )
+
 	lOK := File(cArqTxt)
 	If lOK
 		MsgAlert("Configurações salvas com sucesso!","Atenção...")
@@ -5501,8 +5336,6 @@ Static Function PROCPED()
 	EndIf
 	DbSelectArea("LS2")
 	DbCloseArea("LS2")
-	FErase( cArqTrab2 + ".DTC")
-	FErase( cArqTrab2 + OrdBagExt() )
 
 	OBRWI:obrowse:refresh()
 	OBRWI:obrowse:setfocus()
@@ -6094,6 +5927,8 @@ Static Function ConsNFeChave(cChaveNFe,cIdEnt,cOpc)
 
 						Reclock("LS3",.F.)
 						DbDelete()
+						LS3->( dbCommit() )
+						LS3->(__DBPack())
 						MsUnlock()
 
 						DbSelectArea("LS3")
@@ -6117,7 +5952,9 @@ Static Function ConsNFeChave(cChaveNFe,cIdEnt,cOpc)
 							MsUnlock()
 							DbSkip()
 						End
-						PROCESS()
+						If LS3->(!Eof())
+							PROCESS()
+						EndIf
 					EndIf
 				EndIf
 			EndIf
@@ -6157,6 +5994,8 @@ Static Function ConsNFeChave(cChaveNFe,cIdEnt,cOpc)
 
 					Reclock("LS3",.F.)
 					DbDelete()
+					LS3->( dbCommit() )
+					LS3->(__DBPack())
 					MsUnlock()
 
 					DbSelectArea("LS1")
@@ -6184,7 +6023,9 @@ Static Function ConsNFeChave(cChaveNFe,cIdEnt,cOpc)
 		End
 		DbSelectArea("LS3")
 		DbGoTop()
-		PROCESS()
+		If LS3->(!eof())
+			PROCESS()
+		EndIf
 	EndIf
 
 Return .T.
@@ -6338,8 +6179,7 @@ Static Function RECUPXML()
 
 		DbSelectArea("XML")
 		DbCloseArea("XML")
-		fErase( cArqXML+".DTC")
-		fErase( cArqXML+ OrdBagExt() )
+
 	Else
 		MsgAlert("Parametros inválidos!")
 	EndIf
